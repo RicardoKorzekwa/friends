@@ -40,7 +40,7 @@ export default function AppRoutes(){
                 name="Search" 
                 component={Search}
                 options={{
-                    title: "Faça Login"
+                    title: 'Procurando algum grupo?'
                 }}
             />
         </AppStack.Navigator>

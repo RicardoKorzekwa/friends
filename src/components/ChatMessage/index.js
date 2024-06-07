@@ -28,7 +28,7 @@ export default function ChatMessage({data}){
 
 const styles = StyleSheet.create({
     container:{
-        paddingHorizontal: 10,
+        padding: 10
     },
     messageBox:{
         borderRadius: 5,
