@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
+  FlatList,
+  Keyboard,
   SafeAreaView,
   StyleSheet, 
   Text, 
@@ -7,10 +9,50 @@ import {
   TouchableOpacity, 
   View 
 } from "react-native";
-import Icon from 'react-native-vector-icons/MaterialIcons';                            
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';                            
+import { useIsFocused } from "@react-navigation/native";
+import ChatList from "../../components/ChatList";
 
 export default function Search(){
   const [input, setInput] = useState('');
+  const isFocused = useIsFocused();
+  const [user, setUser] = useState(null);
+  const [chats, setChats] = useState([]);
+
+  useEffect(() => {
+    auth().currentUser ? setUser(auth().currentUser.toJSON()) : setUser(null);
+
+
+ 
+  }, [isFocused]);
+
+  async function handleSearch(){
+    if(input === '') return;
+
+    const responseSearch = await firestore()
+    .collection('MESSAGE_THREADS')
+    .where('name', '>=', input)
+    .where('name', '<=', input + '\uf8ff')
+    .get()
+    .then((querySnapshot) => {
+      const threads = querySnapshot.docs.map((documentSnapshot) =>{
+        return{
+          _id: documentSnapshot.id,
+          name: '',
+          lastMessage: { text: '' },
+          ...documentSnapshot.data()
+        }
+      })
+
+      setChats(threads);
+      setInput('');
+      Keyboard.dismiss();
+    })
+
+  }
+
   return(
     <SafeAreaView style={styles.container}>
       <View style={styles.containerInput}>
@@ -21,10 +63,17 @@ export default function Search(){
           style={styles.input}
           autoCapitalize={"none"}
         />
-        <TouchableOpacity style={styles.buttonSearch}>
+        <TouchableOpacity style={styles.buttonSearch} onPress={handleSearch}>
           <Icon name='search' size={30} color='#FFF'/>
         </TouchableOpacity>
       </View>
+
+      <FlatList
+        showsVerticalScrollIndicator={false}
+        data={chats}
+        keyExtractor={ item => item._id}
+        renderItem={({item}) => <ChatList data={item} userStatus={user}/>}
+      />
     </SafeAreaView>
   )
 } 
